@@ -10,7 +10,7 @@ url <- "https://rest.survey-xact.dk/"
 
 # Namen der Liste
 IP <- c("10a", "10b", "9a", "8b", "8c", "8d", "8e")
-dlType <- c(".data.v1", ".labels.v3", ".structure.v2", ".var.labels.v1")
+dlType <- c(".data.v1", ".val.labels.v3", ".structure.v2", ".var.labels.v1")
 
 apiNames <- cross(list(IP, dlType)) %>%
   map_chr(lift(paste0))
@@ -59,6 +59,6 @@ SXdf <- SXdl %>%
   map_at(vars(matches(".v2")), ~select_at(., vars(oldnames.structure), ~ newnames.structure)) %>% 
   map_at(vars(matches(".v2")), ~filter(., !questionName == "questionName"))
 
-saveRDS(SXdf, file = "SXdf.VE.rds")
+saveRDS(SXdf, file = "SXACT API/SXdf.VE.rds")
   
 
