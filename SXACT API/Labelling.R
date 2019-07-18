@@ -9,7 +9,7 @@ SXdf <- readRDS("SXdf.VE.rds")
 
 data <- SXdf$`10a.data.v1` %>%
   select(matches("survey|stats|s_|b_|stats|stato|closeTime"))
-labels <- SXdf$`10a.labels.v3` %>%
+labels <- SXdf$`10a.val.labels.v3` %>%
   filter(str_detect(V.Name, "survey|stats|s_|b_|stats|stato|closeTime"))
 var.labels <- SXdf$`10a.var.labels.v1` %>%
   filter(str_detect(variableName, "survey|stats|s_|b_|stats|stato|closeTime"))
