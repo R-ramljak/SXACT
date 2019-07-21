@@ -134,5 +134,7 @@ dataset_gelabeled <- dataset_Si_Mc %>%
 
 # saveRDS(dataset_gelabeled, "SXACT API/VE spezifisch/VE_dataset_gelabeled.rds") # Pfad ändern
 
-# write_spss(x = dataset_Si_Mc, path = "Entwicklungsergebnisse/AMM_gelabeled_real_sj.sav")
-
+## Export to other Analysis Programs
+# write_spss(x = dataset_gelabeled, path = "probe.sav") Export to SPSS
+# write_sas(x = dataset_gelabeled, path = "probe.sav") Export to SAS
+# write_stata(x = dataset_gelabeled, path = "probe.dta") Export to STATA 14 (version can be changed with `version = `)
