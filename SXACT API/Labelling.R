@@ -1,4 +1,5 @@
 library(tidyverse) 
+library(stringi)
 library(sjlabelled)
 
 
@@ -15,17 +16,6 @@ var.labels <- SXdf$`10a.var.labels.v1` %>%
   filter(str_detect(variableName, "survey|stats|s_|b_|stats|stato|closeTime"))
 structure <- SXdf$`10a.structure.v2` %>%
   filter(str_detect(variableName, "survey|stats|s_|b_|stats|stato|closeTime"))
-
-
-# ## Fragebezeichnungen für das Excel Sheet
-# label_auswertung <- var.labels %>%
-#   mutate(Item = sub("(\\?).*", "\\1", .$variableDescription)) %>%
-#   select(Item) %>%
-#   distinct() %>%
-#   filter(grepl('\\?', Item)) %>% # alle Fragen nur mit Fragezeichen übernehmen (Hintergrund FB wird ausgeschlossen)
-#   mutate(Item = paste("Frage", Item, sep = " "))
-# 
-# saveRDS(label_auswertung, "Entwickelte Datensätze/Fragebezeichnungen_PSZ_Beratung.rds")
 
 
 ## Struktur Datei aus SX verändern
@@ -56,6 +46,44 @@ structure_final <- structure_int %>%
   mutate(Nummer_final = paste0(.$Fragenummer_final, ".", .$Nummer, "_", .$type)) %>%
   mutate(Nummer_final = str_replace(Nummer_final, " ", ""))
 
+
+
+## Fragebezeichnungen für das Excel Sheet
+
+# Sollte vektorisiert werden, Problem mit sich gleichenden pattern Strings
+pattern <- c("{%expression:{*1/1/478269657*}%}", "{%expression:{*1/1/478269841*}%}", "{%expression:{*1/1/478269656*}%}", 
+             "{%expression:{*1/1/478269789*}%}") #evtl. Expressions einfügen
+replacement <- c("[Austritt + 4 Wochen]", "[Austritt + 6 Monate]", "[Eintritt]",
+                 "[Unternehmen]") #respektive die Ersetzungen einfügen
+
+label_auswertung <- var.labels %>%
+  mutate(variableDescription = 
+                stringi::stri_replace_all_fixed(str = variableDescription, 
+                                                pattern = "{%expression:{*1/1/478269657*}%}",
+                                                replacement = "[Austritt + 4 Wochen]")) %>% 
+  mutate(variableDescription = 
+                stringi::stri_replace_all_fixed(str = variableDescription, 
+                                                pattern = "{%expression:{*1/1/478269841*}%}", 
+                                                replacement = "[Austritt + 6 Monate]")) %>%
+  mutate(variableDescription = 
+                stringi::stri_replace_all_fixed(str = variableDescription, 
+                                                pattern = "{%expression:{*1/1/478269656*}%}", 
+                                                replacement = "[Eintritt]")) %>%
+  mutate(variableDescription = 
+                stringi::stri_replace_all_fixed(str = variableDescription, 
+                                                pattern = "{%expression:{*1/1/478269789*}%}", 
+                                                replacement = "[Unternehmen]")) %>% 
+  mutate(Item = case_when(str_detect(variableDescription, "(\\?)") ~ sub("(\\?).*", "\\1", .$variableDescription),
+                                  TRUE ~ variableDescription)) %>%
+  left_join(structure_final, by = "variableName") %>%
+  mutate(Item = case_when(questionPrefix == "System" ~ paste("Systemvariable", Fragenummer_final, Item, sep = " "),
+                                  questionPrefix == "Vordergrund" ~ paste("Frage", Fragenummer_final, Item, sep = " "),
+                                  questionPrefix == "Hintergrund" ~ paste("Hintergrundvariable", Fragenummer_final, Item, sep = " "))) %>%
+  select(Item) %>%
+  distinct()
+  # filter(grepl('\\?', Item)) # alle Fragen nur mit Fragezeichen übernehmen (Hintergrund und System FB wird ausgeschlossen)
+
+# saveRDS(label_auswertung, "SXACT API/VE spezifisch/VE_label_auswertung.rds") #Expressions oben ändern und Pfad neu benennen
 
 
 ## Variablen Label 
@@ -104,7 +132,7 @@ dataset_gelabeled <- dataset_Si_Mc %>%
   select(structure_final$Nummer_final) %>%  # in die ursprüngliche Form bringen
   set_label(label = var.labels$short)
 
-saveRDS(dataset_gelabeled, "")
+# saveRDS(dataset_gelabeled, "SXACT API/VE spezifisch/VE_dataset_gelabeled.rds") # Pfad ändern
 
 # write_spss(x = dataset_Si_Mc, path = "Entwicklungsergebnisse/AMM_gelabeled_real_sj.sav")
 
